@@ -55,16 +55,9 @@ def _async_get_device_and_entry(
     call: ServiceCall, device_id: str
 ) -> tuple[dr.DeviceEntry, PortainerConfigEntry]:
     """Resolve and validate the device and Portainer config entry for a device ID."""
-    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
-        call.hass, device_id, domain=DOMAIN
-    )
-    if device is None or config_entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_target",
-        )
-    entry: PortainerConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, config_entry.entry_id
+    entry: PortainerConfigEntry
+    device, entry = service.async_get_device_and_config_entry(
+        call.hass, DOMAIN, device_id
     )
     return device, entry
 
@@ -178,7 +171,8 @@ async def recreate_container(call: ServiceCall) -> None:
     await coordinator.async_request_refresh()
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
 
     hass.services.async_register(
